@@ -1,5 +1,6 @@
 import os
 import pinecone
+import environ
 from langchain.llms import Replicate
 from langchain.vectorstores import Pinecone
 from langchain.text_splitter import CharacterTextSplitter
@@ -7,7 +8,14 @@ from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.chains import ConversationalRetrievalChain
 from langchain.document_loaders.csv_loader import CSVLoader
 
-os.environ['REPLICATE_API_TOKEN'] = "r8_TPXMKMNaTtXLNn4grSg5qibyIQVDJw81AixsC"
+env = environ.Env()
+environ.Env.read_env()
+
+REPLICATE_API_TOKEN = env('REPLICATE_API_TOKEN')
+PINECONE_API_KEY = env("PINECONE_API_KEY")
+
+os.environ['REPLICATE_API_TOKEN'] = REPLICATE_API_TOKEN
+os.environ['PINECONE_API_KEY'] = PINECONE_API_KEY
 
 loader = CSVLoader(file_path="/Users/kevinlu/Desktop/claims data/Train_Inpatientdata-1542865627584.csv")
 documents = loader.load()
@@ -18,7 +26,7 @@ texts = text_splitter.split_documents(documents)
 embeddings = HuggingFaceEmbeddings()
 
 pinecone.init(      
-	api_key='4fa75472-35d7-4ae5-b9aa-de9bfb0f8a5d',      
+	api_key=PINECONE_API_KEY,      
 	environment='gcp-starter'      
 )      
 index = pinecone.Index('hfraudtest')
