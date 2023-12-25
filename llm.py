@@ -7,7 +7,8 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.chains import ConversationalRetrievalChain
 from langchain.document_loaders import DataFrameLoader
-from dataManip import resultingInpatientStrgData
+from dataManip import resultingInpatientStrgDataJSON
+import replicate
 
 env = environ.Env()
 environ.Env.read_env()
@@ -36,20 +37,33 @@ index = pinecone.Index(index_name)
 
 vectordb = Pinecone.from_existing_index("stringeddata", embeddings)
 
-llm = Replicate(
-    model="meta/llama-2-70b-chat:02e509c789964a7ea8736978a43525956ef40397be9033abf9fd2badfe68c9e3",
-    model_kwargs={"temperature": 0.75, "max_length": 3000}
+# model training
+training = replicate.trainings.create(
+  version="meta/llama-2-7b:73001d654114dad81ec65da3b834e2f691af1e1526453189b7bf36fb3f32d0f9",
+  input={
+    "train_data": "https://gist.github.com/kevinlu625/e36d6efef2b7435f07778f49656e5a8f",
+    "num_train_epochs": 3
+  },
+  destination="kevinlu625/hfraudtest"
 )
 
-qa_chain = ConversationalRetrievalChain.from_llm(
-    llm,
-    vectordb.as_retriever(search_kwargs={'k': 2}),
-    return_source_documents=True
-)
+print(training)
 
-chat_history = []
-while True:
-    query = input('Prompt: ')
-    result = qa_chain({'question': query, 'chat_history': chat_history})
-    print('Answer: ' + result['answer'] + '\n')
-    chat_history.append((query, result['answer']))
+
+# llm = Replicate(
+#     model="meta/llama-2-70b-chat:02e509c789964a7ea8736978a43525956ef40397be9033abf9fd2badfe68c9e3",
+#     model_kwargs={"temperature": 0.75, "max_length": 3000}
+# )
+
+# qa_chain = ConversationalRetrievalChain.from_llm(
+#     llm,
+#     vectordb.as_retriever(search_kwargs={'k': 2}),
+#     return_source_documents=True
+# )
+
+# chat_history = []
+# while True:
+#     query = input('Prompt: ')
+#     result = qa_chain({'question': query, 'chat_history': chat_history})
+#     print('Answer: ' + result['answer'] + '\n')
+#     chat_history.append((query, result['answer']))
