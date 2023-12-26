@@ -1,10 +1,15 @@
 import pandas as pd
 import json
 
-beneficiaryData = pd.read_csv('/Users/kevinlu/Desktop/claims data/Train_Beneficiarydata-1542865627584.csv')
-inpatientData = pd.read_csv('/Users/kevinlu/Desktop/claims data/Train_Inpatientdata-1542865627584.csv')
-outpatientData = pd.read_csv('/Users/kevinlu/Desktop/claims data/Train_Outpatientdata-1542865627584.csv')
-labeledData = pd.read_csv('/Users/kevinlu/Desktop/claims data/Train-1542865627584.csv')
+# beneficiaryData = pd.read_csv('/Users/kevinlu/Desktop/claims data/Train_Beneficiarydata-1542865627584.csv')
+# inpatientData = pd.read_csv('/Users/kevinlu/Desktop/claims data/Train_Inpatientdata-1542865627584.csv')
+# outpatientData = pd.read_csv('/Users/kevinlu/Desktop/claims data/Train_Outpatientdata-1542865627584.csv')
+# labeledData = pd.read_csv('/Users/kevinlu/Desktop/claims data/Train-1542865627584.csv')
+
+beneficiaryData = pd.read_csv('claims_data/Train_Beneficiarydata-1542865627584.csv')
+inpatientData = pd.read_csv('claims_data/Train_Inpatientdata-1542865627584.csv')
+outpatientData = pd.read_csv('claims_data/Train_Outpatientdata-1542865627584.csv')
+labeledData = pd.read_csv('claims_data/Train-1542865627584.csv')
 
 inpatientData.drop(['ClmProcedureCode_6', 'ClmProcedureCode_5', 'ClmProcedureCode_4'], axis=1, inplace=True)
 outpatientData.drop(['ClmProcedureCode_6', 'ClmProcedureCode_5', 'ClmProcedureCode_4'], axis=1, inplace=True)
@@ -41,6 +46,33 @@ def pdSentenceToJSON(pd, output_file):
     return output_file
 
 # resultingInpatientStrgDataJSON = pdSentenceToJSON(resultingInpatientStrgData, "inpatientJSON.jsonl")
+
+
+def create_jsonl_from_df_gpt35(df):
+    jsonl_list = []
+
+    # System role content stays constant
+    system_content = "KSol is a chatbot that detects whether or not a patient claim is fraudulent"
+
+    for index, row in df.iterrows():
+        # Constructing the message structure
+        message_structure = {
+            "messages": [
+                {"role": "system", "content": system_content},
+                {"role": "user", "content": f"{row['metadata']} Is this provider fraudulent?"},
+                {"role": "assistant", "content": row['result']}
+            ]
+        }
+        jsonl_list.append(message_structure)
+    
+    # Save to JSONL file
+    with open('inpatientJSONGPT.jsonl', 'w') as jsonl_file:
+        json.dump(jsonl_list, jsonl_file, indent=1)
+
+    return jsonl_list
+
+# jsonl_list = create_jsonl_from_df_gpt35(resultingInpatientStrgData)
+
 
 ## data checking for gpt training
 
