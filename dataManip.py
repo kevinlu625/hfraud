@@ -65,14 +65,13 @@ def create_jsonl_from_df_gpt35(df):
         }
         jsonl_list.append(message_structure)
     
-    # Save to JSONL file
-    with open('inpatientJSONGPT.jsonl', 'w') as jsonl_file:
-        json.dump(jsonl_list, jsonl_file, indent=1)
-
     return jsonl_list
 
 # jsonl_list = create_jsonl_from_df_gpt35(resultingInpatientStrgData)
-
+# with open('inpatientJSONGPT.jsonl', 'w') as jsonl_file:
+#     for jsonl in jsonl_list:
+#         json.dump(jsonl, jsonl_file)
+#         jsonl_file.write('\n')
 
 ## data checking for gpt training
 
