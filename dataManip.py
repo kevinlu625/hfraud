@@ -31,7 +31,7 @@ resultingInpatientStrgData = pdToSentence(inpatientLabeledData)
 
 print(resultingInpatientStrgData)
 
-def pdSentenceToJSON(pd, output_file):
+def pdSentenceToJSONLlama(pd, output_file):
     json_data = [{"text": row} for row in pd['sentence'].tolist()]
 
     # Save to JSON file
