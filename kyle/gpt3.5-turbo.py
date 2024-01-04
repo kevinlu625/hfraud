@@ -1,5 +1,7 @@
 import openai
 
+# export OPENAI_API_KEY='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'
+
 # read openai key from openai-key.txt
 with open('kyle/openai-key.txt', 'r') as f:
     key = f.read()
@@ -23,7 +25,7 @@ response = client.chat.completions.create(
   model="ft:gpt-3.5-turbo-1106:personal::8ZrzBZSq",
   messages=[
     {"role": "system", "content": "KSol is a chatbot that detects whether or not a patient claim is fraudulent"},
-    {"role": "user", "content": "PRV55907 has a medical claim with id CLM75778 from beneficiary BENE53771 that was started on 2009-11-13 and ended on 2009-11-17 for a reimbursement amount of 5000. The attending physician for this claim was PHY346515 and the operating physician was nan. The claim diagnosis codes were 6826, 25080, 2724, V4364, V090, 2809, 2662, 2720, 27800, nan. The procedure codes were nan, nan, nan.  Is this provider fraudulent?"}
+    {"role": "user", "content": "Give me three example claims that are fraudulent, and what pattern do you notice?"}, 
   ]
 )
-print(completion.choices[0].message)
+print(response.choices[0].message)
