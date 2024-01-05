@@ -121,4 +121,3 @@ def cleaningAllFraudstersForAYear (janToDecFraudReport):
 # print(allFraudsterFor2021.columns)
     
 # cleaningAllFraudstersForAYear(fraud_dfs)
-

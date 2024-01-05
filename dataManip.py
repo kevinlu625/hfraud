@@ -2,7 +2,6 @@ import pandas as pd
 import requests
 import json
 import time
-from datetime import datetime
 from bs4 import BeautifulSoup
 
 def pdToSentenceChat(df):
@@ -39,17 +38,11 @@ def pdToSentenceText(df):
 def dojPressReleasePDToText(df):
     sentence_template = "{title}.{body}.{date}"
 
-    def get_fraud_status(fraud):
-        if fraud == 'Yes':
-            return "This provider is considered to be fraudulent"
-        elif fraud == 'No':
-            return "This provider is not considered to be fraudulent"
-        else:
-            return "Fraud status unknown"
+    dojPressReleaseText = pd.DataFrame()
+    dojPressReleaseText['data'] = df.apply(lambda row: sentence_template.format(**row), axis=1)
+    pdSentenceToJSON(dojPressReleaseText, '')
 
-    result_df = pd.DataFrame()
-    result_df['sentence'] = df.apply(lambda row: sentence_template.format(**row) + " " + get_fraud_status(row['PotentialFraud']), axis=1)
-    return result_df
+    return dojPressReleaseText
 
 # resultingInpatientStrgData = pdToSentenceText(inpatientLabeledData)
 
@@ -57,7 +50,7 @@ def dojPressReleasePDToText(df):
 
 # print(resultingInpatientStrgDataTrimmed)
 
-def pdSentenceToJSONLlama(pd, output_file):
+def pdSentenceToJSON(pd, output_file):
     json_data = [{"text": row} for row in pd['sentence'].tolist()]
 
     with open(output_file, 'w') as json_file:
@@ -115,11 +108,29 @@ def getDOJPressReleaseInfo(apiurl):
     else:
         print("No press releases found.")
 
-def html_to_text(html):
-    soup = BeautifulSoup(html, 'html.parser')
-    return soup.get_text(separator=' ', strip=True)
+def fullDOJPressReleaseCleanUp(file):
 
-dojpressreleasepd = pd.read_csv('/Users/kevinlu/Documents/GitHub/hfraud/dojPressRelease.csv')
-# Apply the function to the 'body' column
-dojpressreleasepd['body'] = dojpressreleasepd['body'].apply(html_to_text)
-print(dojpressreleasepd.loc(0, 'body'))
+    dojpressreleasepd = pd.read_csv(file)
+
+    def html_to_text_with_paragraphs(html):
+        soup = BeautifulSoup(html, 'html.parser')
+        
+        # Extract text content for each paragraph
+        paragraphs = soup.find_all('p')
+        paragraph_texts = [paragraph.get_text(separator=' ', strip=True) for paragraph in paragraphs]
+        
+        # Concatenate paragraph texts
+        result_text = '\n\n'.join(paragraph_texts)
+        
+        return result_text
+
+    # Apply the function to the 'body' column
+    dojpressreleasepd['body'] = dojpressreleasepd['body'].apply(html_to_text_with_paragraphs)
+
+    #more cleanup
+    dojpressreleasepd.drop_duplicates(subset=['title', 'body', 'date'], inplace=True)
+    dojpressreleasepd = dojpressreleasepd.loc[:, ~dojpressreleasepd.columns.str.contains('^Unnamed')]
+    dojpressreleasepd.to_csv('/Users/kevinlu/Documents/GitHub/hfraud/data/dojPressRelease.csv')
+    
+fullDOJPressReleaseCleanUp('/Users/kevinlu/Documents/GitHub/hfraud/data/dojPressReleaseDirty.csv')
+
