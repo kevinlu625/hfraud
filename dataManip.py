@@ -132,5 +132,3 @@ def fullDOJPressReleaseCleanUp(file):
     dojpressreleasepd = dojpressreleasepd.loc[:, ~dojpressreleasepd.columns.str.contains('^Unnamed')]
     dojpressreleasepd.to_csv('/Users/kevinlu/Documents/GitHub/hfraud/data/dojPressRelease.csv')
     
-fullDOJPressReleaseCleanUp('/Users/kevinlu/Documents/GitHub/hfraud/data/dojPressReleaseDirty.csv')
-

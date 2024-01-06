@@ -28,124 +28,135 @@ os.environ['REPLICATE_API_TOKEN'] = REPLICATE_API_TOKEN
 os.environ['PINECONE_API_KEY'] = PINECONE_API_KEY
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
-#testing out RAG deployment
-chat = ChatOpenAI(
-    openai_api_key=OPENAI_API_KEY,
-    model='gpt-3.5-turbo'
-)
-
-pinecone.init(      
-	api_key=PINECONE_API_KEY,      
-	environment='gcp-starter'      
-)      
-
-index_name = 'hfraudcontext'
-
-if index_name not in pinecone.list_indexes():
-    pinecone.create_index(
-        index_name,
-        dimension=1536,
-        metric='cosine'
+dojPressRelease = pd.read_csv('/Users/kevinlu/Documents/GitHub/hfraud/data/dojPressRelease.csv')
+def runDOJPressReleaseRagWithGPT3Point5Turbo(dojPressRelease):
+    #testing out RAG deployment
+    chat = ChatOpenAI(
+        openai_api_key=OPENAI_API_KEY,
+        model='gpt-3.5-turbo'
     )
-    # wait for index to finish initialization
-    while not pinecone.describe_index(index_name).status['ready']:
-        time.sleep(1)
 
-index = pinecone.Index(index_name)
+    pinecone.init(      
+        api_key=PINECONE_API_KEY,      
+        environment='gcp-starter'      
+    )      
 
-# print(index.describe_index_stats())
+    index_name = 'hfraudcontext'
 
-# dojPressRelease = pd.read_csv('/Users/kevinlu/Documents/GitHub/hfraud/data/dojPressRelease.csv')
+    if index_name not in pinecone.list_indexes():
+        pinecone.create_index(
+            index_name,
+            dimension=1536,
+            metric='cosine'
+        )
+        # wait for index to finish initialization
+        while not pinecone.describe_index(index_name).status['ready']:
+            time.sleep(1)
 
-# # Splitting paragraphs
-# dojPressRelease['body'] = dojPressRelease['body'].str.split('\n\n')
+    index = pinecone.Index(index_name)
 
-# # Exploding the DataFrame to create separate rows for each paragraph
-# dojPressRelease = dojPressRelease.explode('body')
+    # print(index.describe_index_stats())
 
-# # Resetting index
-# dojPressRelease.reset_index(drop=True, inplace=True)
+    def chunkingDataDownIntoParagraphs(dojPressRelease):
+        # Splitting paragraphs
+        dojPressRelease['body'] = dojPressRelease['body'].str.split('\n\n')
 
-# dojPressRelease = dojPressRelease.loc[:, ~dojPressRelease.columns.str.contains('^Unnamed')]
+        # Exploding the DataFrame to create separate rows for each paragraph
+        dojPressRelease = dojPressRelease.explode('body')
 
-# dojPressRelease['id'] = dojPressRelease.reset_index().index
+        # Resetting index
+        dojPressRelease.reset_index(drop=True, inplace=True)
 
-# dojPressRelease['title'] = dojPressRelease['title'].astype(str)
-# dojPressRelease['body'] = dojPressRelease['body'].astype(str)
-# dojPressRelease['date'] = dojPressRelease['date'].astype(str)
+        dojPressRelease = dojPressRelease.loc[:, ~dojPressRelease.columns.str.contains('^Unnamed')]
 
-embed_model = OpenAIEmbeddings(model="text-embedding-ada-002")
+        dojPressRelease['id'] = dojPressRelease.reset_index().index
 
-# batch_size = 100
+        dojPressRelease['title'] = dojPressRelease['title'].astype(str)
+        dojPressRelease['body'] = dojPressRelease['body'].astype(str)
+        dojPressRelease['date'] = dojPressRelease['date'].astype(str)
 
-# for i in tqdm(range(0, len(dojPressRelease), batch_size)):
-#     i_end = min(len(dojPressRelease), i + batch_size)
-    
-#     # Get batch of data
-#     batch = dojPressRelease.iloc[i:i_end]
-    
-#     # Get text to embed
-#     texts = [x['body'] for _, x in batch.iterrows()]
+    embed_model = OpenAIEmbeddings(model="text-embedding-ada-002")
 
-#     ids = [f"{x['id']}-{i}" for i, x in batch.iterrows()]
-    
-#     # Embed text
-#     embeds = embed_model.embed_documents(texts)
-    
-#     # Get metadata to store in Pinecone
-#     metadata = [
-#         {'text': x['body'],
-#          'date': x['date'],
-#          'title': x['title']} for _, x in batch.iterrows()
-#     ]
-    
-#     # Add to Pinecone
-#     index.upsert(vectors=zip(ids, embeds, metadata))
+    def upsertingVectorsToPinecone(dojPressReleaseCSV):
+        batch_size = 100
 
-text_field = "text"  # the metadata field that contains our text
+        for i in tqdm(range(0, len(dojPressReleaseCSV), batch_size)):
+            i_end = min(len(dojPressReleaseCSV), i + batch_size)
+            
+            # Get batch of data
+            batch = dojPressReleaseCSV.iloc[i:i_end]
+            
+            # Get text to embed
+            texts = [x['body'] for _, x in batch.iterrows()]
 
-# initialize the vector store object
-vectorstore = Pinecone(
-    index, embed_model.embed_query, text_field
-)
+            ids = [f"{x['id']}-{i}" for i, x in batch.iterrows()]
+            
+            # Embed text
+            embeds = embed_model.embed_documents(texts)
+            
+            # Get metadata to store in Pinecone
+            metadata = [
+                {'text': x['body'],
+                 'date': x['date'],
+                 'title': x['title']} for _, x in batch.iterrows()
+        ]
+        
+        # Add to Pinecone
+        index.upsert(vectors=zip(ids, embeds, metadata))
 
-query = "Give me an example of a fraudulent healthcare scheme."
+    text_field = "text"  # the metadata field that contains our text
 
-# print(vectorstore.similarity_search(query, k=5))
-
-def augment_prompt(query: str):
-    # get top 3 results from knowledge base
-    results = vectorstore.similarity_search(query, k=5)
-    # get the text from the results
-    source_knowledge = "\n".join([x.page_content for x in results])
-    # feed into an augmented prompt
-    augmented_prompt = f"""Using the contexts below, answer the query.
-
-    Contexts:
-    {source_knowledge}
-
-    Query: {query}"""
-    return augmented_prompt
-
-prompt_text = input("Describe your case: ")
-
-prompt = HumanMessage(
-    content=augment_prompt(
-        prompt_text
+    # initialize the vector store object
+    vectorstore = Pinecone(
+        index, embed_model.embed_query, text_field
     )
-)
 
-messages = [
-    SystemMessage(content="You are an LLM trained on historic healthcare fraud cases."),
-    HumanMessage(content="Hi AI, how are you today?"),
-    AIMessage(content="I'm great thank you. How can I help you?"),
-]
+    query = "Give me an example of a fraudulent healthcare scheme."
 
-res = chat(messages + [prompt])
+    # print(vectorstore.similarity_search(query, k=5))
 
-messages.append(res)
+    def augment_prompt(query: str):
+        # get top 3 results from knowledge base
+        results = vectorstore.similarity_search(query, k=5)
+        # get the text from the results
+        source_knowledge = "\n".join([x.page_content for x in results])
+        # feed into an augmented prompt
+        augmented_prompt = f"""Using the contexts below, answer the query.
 
-print(res.content)
+        Contexts:
+        {source_knowledge}
+
+        Query: {query}"""
+
+        print(results)
+
+        return augmented_prompt
+
+    prompt_text = input("Describe your case: ")
+
+    prompt = HumanMessage(
+        content=augment_prompt(
+            prompt_text
+        )
+    )
+
+    messages = [
+        SystemMessage(content="You are an LLM trained on historic healthcare fraud cases."),
+        HumanMessage(content="Hi AI, how are you today?"),
+        AIMessage(content="I'm great thank you. How can I help you?"),
+    ]
+
+    res = chat(messages + [prompt])
+
+    messages.append(res)
+
+    print(res.content)
+
+
+
+
+
+
 ######################################
 
 # loader = DataFrameLoader(resultingInpatientStrgData, page_content_column="sentence")
