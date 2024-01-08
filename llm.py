@@ -16,6 +16,8 @@ from langchain.schema import (
     AIMessage
 )
 from tqdm.auto import tqdm
+from openai import OpenAI
+
 
 env = environ.Env()
 environ.Env.read_env()
@@ -152,11 +154,6 @@ def runDOJPressReleaseRagWithGPT3Point5Turbo(dojPressRelease):
 
     print(res.content)
 
-
-
-
-
-
 ######################################
 
 # loader = DataFrameLoader(resultingInpatientStrgData, page_content_column="sentence")
@@ -197,3 +194,14 @@ def runDOJPressReleaseRagWithGPT3Point5Turbo(dojPressRelease):
 #     result = qa_chain({'question': query, 'chat_history': chat_history})
 #     print('Answer: ' + result['answer'] + '\n')
 #     chat_history.append((query, result['answer']))
+    
+client = OpenAI()
+
+response = client.chat.completions.create(
+  model="ft:gpt-3.5-turbo-1106:k-solutions::8eXjaj9k",
+  messages=[
+    {"role": "system", "content": "You are a chatbot that, given some provider data, determines whether or not the provider is fraudulent"},
+    {"role": "user", "content": "Please determine whether or not this provider is fraudulent: The provider\u2019s name is Stuart T Lewis D.O.. They practice Internal Medicine. In 2021, they charged Medicare for these HCPCS codes: ['J7620', 'Q0513', 'K0001', 'E1390', 'E0261', 'K0195', 'J7626', 'E1392']. Their beneficiaries' average age was 83.384615385. Their beneficiaries' average risk score was 2.1425128205. Of this providers patients,  75.0% have Alzheimer\u2019s/Dementia, 75.0% have Depression, 75.0% have Hypertension, 0.0% have Osteoporosis, They ordered a total of $53149.77 for all durable medical equipment (DME) products/services. Their Medicare allowed amount for all DME products/services was $13915.16. The standardized amount that Medicare paid them after deductible and coinsurance amounts was $11000.55. The total number of unique beneficiaries associated with DME claims ordered by this provider was 13.0. The total number of DME claims ordered by this provider was 106.0. The total number of unique DME HCPCS codes ordered by this provider was 17.0. The total number of DME products/services ordered by this provider was 2092.0. The total number of DME suppliers this provider worked with was 8.0.They ordered a total of $396.0 for all drug and nutritional products/services. Their Medicare allowed amount for all drug and nutritional products/services ordered by this referring provider is $396.0. The standardized amount that Medicare paid after deductible and coinsurance amounts was $284.57. The total number of drug and nutritional product claims ordered by this provider was 12.0. The total number of unique drug and nutritional product HCPCS codes ordered by this provider was 1.0. The total number of drug and nutritional products/services ordered by this provider was 12.0. The total number of drug and nutritional suppliers this provider worked with was 1.0.They ordered a total of $0.0 for all prosthetic and orthotic (POS) products/services. Their Medicare allowed amount for all POS products/services ordered by this referring provider is $0.0. The standardized amount that Medicare paid after deductible and coinsurance amounts was $0.0. The total number of unique beneficiaries associated with POS claims ordered by this provider was 0.0. The total number of POS claims ordered by this provider was 0.0. The total number of unique POS HCPCS codes ordered by this provider was 0.0. The total number of POS products/services ordered by this provider was 0.0. The total number of POS suppliers this provider worked with was 0.0."}
+  ]
+)
+print(response.choices[0].message)

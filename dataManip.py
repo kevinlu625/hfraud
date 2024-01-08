@@ -44,12 +44,6 @@ def dojPressReleasePDToText(df):
 
     return dojPressReleaseText
 
-# resultingInpatientStrgData = pdToSentenceText(inpatientLabeledData)
-
-# resultingInpatientStrgDataTrimmed = resultingInpatientStrgData.head(8000)
-
-# print(resultingInpatientStrgDataTrimmed)
-
 def pdSentenceToJSON(pd, output_file):
     json_data = [{"text": row} for row in pd['sentence'].tolist()]
 
@@ -131,4 +125,3 @@ def fullDOJPressReleaseCleanUp(file):
     dojpressreleasepd.drop_duplicates(subset=['title', 'body', 'date'], inplace=True)
     dojpressreleasepd = dojpressreleasepd.loc[:, ~dojpressreleasepd.columns.str.contains('^Unnamed')]
     dojpressreleasepd.to_csv('/Users/kevinlu/Documents/GitHub/hfraud/data/dojPressRelease.csv')
-    
