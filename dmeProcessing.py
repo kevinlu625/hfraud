@@ -67,7 +67,7 @@ dmeFinal2019 = pd.read_csv('/Users/kevinlu/Documents/GitHub/hfraud/data/dmeFinal
 X = dmeFinal2019.drop('fraud', axis=1)
 y = dmeFinal2019['fraud']
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
 dmeFinal2019TrainSet = pd.concat([X_train, y_train], axis=1)
 dmeFinal2019TestSet = pd.concat([X_test, y_test], axis=1)
@@ -186,52 +186,52 @@ def get_fraud_status(fraud):
     else:
         return "Fraud status unknown"
 
-# Assuming df is your DataFrame
-# Apply the function to each row and create a new column with the results
-result_df = pd.DataFrame()
-result_df['metadata'] = dmeFinal2019TrainSetReduced.apply(trainingForGPTJSONL, axis=1)
-result_df['result'] = dmeFinal2019TrainSetReduced.apply(lambda row: get_fraud_status(row['fraud']), axis=1)
+# # Assuming df is your DataFrame
+# # Apply the function to each row and create a new column with the results
+# result_df = pd.DataFrame()
+# result_df['metadata'] = dmeFinal2019TrainSetReduced.apply(trainingForGPTJSONL, axis=1)
+# result_df['result'] = dmeFinal2019TrainSetReduced.apply(lambda row: get_fraud_status(row['fraud']), axis=1)
 
-# System role content stays constant
-system_content = "Robin is a chatbot that, given some provider data, determines whether or not the provider is fraudulent"
-jsonl_list = []
+# # System role content stays constant
+# system_content = "Robin is a chatbot that, given some provider data, determines whether or not the provider is fraudulent"
+# jsonl_list = []
 
-for index, row in result_df.iterrows():
-    # Constructing the message structure
-    message_structure = {
-        "messages": [
-            {"role": "system", "content": system_content},
-            {"role": "user", "content": f"{row['metadata']}"},
-            {"role": "assistant", "content": row['result']}
-        ]
-    }
-    jsonl_list.append(message_structure)
+# for index, row in result_df.iterrows():
+#     # Constructing the message structure
+#     message_structure = {
+#         "messages": [
+#             {"role": "system", "content": system_content},
+#             {"role": "user", "content": f"{row['metadata']}"},
+#             {"role": "assistant", "content": row['result']}
+#         ]
+#     }
+#     jsonl_list.append(message_structure)
 
-with open('dme2019SmallGPTTraining.jsonl', 'w') as jsonl_file:
-    for jsonl in jsonl_list:
-        json.dump(jsonl, jsonl_file)
-        jsonl_file.write('\n')
+# with open('dme2019SmallGPTTraining.jsonl', 'w') as jsonl_file:
+#     for jsonl in jsonl_list:
+#         json.dump(jsonl, jsonl_file)
+#         jsonl_file.write('\n')
 
-result_df = pd.DataFrame()
-result_df['metadata'] = dmeFinal2019TestSetReduced.apply(trainingForGPTJSONL, axis=1)
-result_df['result'] = dmeFinal2019TestSetReduced.apply(lambda row: get_fraud_status(row['fraud']), axis=1)
+# result_df = pd.DataFrame()
+# result_df['metadata'] = dmeFinal2019TestSetReduced.apply(trainingForGPTJSONL, axis=1)
+# result_df['result'] = dmeFinal2019TestSetReduced.apply(lambda row: get_fraud_status(row['fraud']), axis=1)
 
-# System role content stays constant
-system_content = "Robin is a chatbot that, given some provider data, determines whether or not the provider is fraudulent"
-jsonl_list = []
+# # System role content stays constant
+# system_content = "Robin is a chatbot that, given some provider data, determines whether or not the provider is fraudulent"
+# jsonl_list = []
 
-for index, row in result_df.iterrows():
-    # Constructing the message structure
-    message_structure = {
-        "messages": [
-            {"role": "system", "content": system_content},
-            {"role": "user", "content": f"{row['metadata']}"},
-            {"role": "assistant", "content": row['result']}
-        ]
-    }
-    jsonl_list.append(message_structure)
+# for index, row in result_df.iterrows():
+#     # Constructing the message structure
+#     message_structure = {
+#         "messages": [
+#             {"role": "system", "content": system_content},
+#             {"role": "user", "content": f"{row['metadata']}"},
+#             {"role": "assistant", "content": row['result']}
+#         ]
+#     }
+#     jsonl_list.append(message_structure)
 
-with open('TESTdme2019SmallGPT.jsonl', 'w') as jsonl_file:
-    for jsonl in jsonl_list:
-        json.dump(jsonl, jsonl_file)
-        jsonl_file.write('\n')
+# with open('TESTdme2019SmallGPT.jsonl', 'w') as jsonl_file:
+#     for jsonl in jsonl_list:
+#         json.dump(jsonl, jsonl_file)
+#         jsonl_file.write('\n')
