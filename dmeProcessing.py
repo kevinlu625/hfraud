@@ -42,8 +42,8 @@ def cleaningDMEForAYear (dmeProvAndServCSVForYear, dmeProvCSVForYear, year):
     # Save the merged DataFrame to a CSV file
     dmeMerged.to_csv(filename, index=False)
 
-# cleaningDMEForAYear('/Users/kevinlu/Documents/GitHub/hfraud/data/medicare data/dmePS2021.csv',
-#                     '/Users/kevinlu/Documents/GitHub/hfraud/data/medicare data/dmeP2021.csv', 2021)
+# cleaningDMEForAYear('/Users/kevinlu/Documents/GitHub/hfraud/data/medicare data/dmePS2019.csv',
+#                     '/Users/kevinlu/Documents/GitHub/hfraud/data/medicare data/dmeP2019.csv', 2019)
 
 def labelFinalDataset (allFraudForYear, dataset, year):
     allFraudForYear = pd.read_csv(allFraudForYear)
@@ -55,14 +55,23 @@ def labelFinalDataset (allFraudForYear, dataset, year):
 
     filename = f'dmeFinal{year}.csv'
 
-    dmeMerged.to_csv(filename)
+    dmeMerged.to_csv(filename, index=False)
 
-# labelFinalDataset('/Users/kevinlu/Documents/GitHub/hfraud/data/allFraud2021.csv',
-#                   '/Users/kevinlu/Documents/GitHub/hfraud/data/dme2021Merged.csv',
-#                   2021)
+# labelFinalDataset('/Users/kevinlu/Documents/GitHub/hfraud/data/allFraud2019.csv',
+#                   '/Users/kevinlu/Documents/GitHub/hfraud/data/dme2019Merged.csv',
+#                   2019)
 
-#ROS + RUS for training and validation to counter class imbalance
-dmeFinal2021 = pd.read_csv('/Users/kevinlu/Documents/GitHub/hfraud/data/dmeFinal2021.csv')
+# #ROS + RUS for training and validation to counter class imbalance
+dmeFinal2019 = pd.read_csv('/Users/kevinlu/Documents/GitHub/hfraud/data/dmeFinal2019.csv')
+
+X = dmeFinal2019.drop('fraud', axis=1)
+y = dmeFinal2019['fraud']
+
+# Split the data into training and test sets (adjust the test_size parameter as needed)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+dmeFinal2019TrainSet = pd.concat([X_train, y_train], axis=1)
+dmeFinal2019TestSet = pd.concat([X_test, y_test], axis=1)
 
 def oversamplingAndReduction(df, minorityRatio, percentageToKeep):
     #Oversampling
@@ -83,18 +92,8 @@ def oversamplingAndReduction(df, minorityRatio, percentageToKeep):
 
     return dmeFinal2021Reduced
 
-dmeFinal2021Reduced = oversamplingAndReduction(dmeFinal2021, .3, .01)
-
-#splitting into training and test set
-    
-X = dmeFinal2021Reduced.drop('fraud', axis=1)
-y = dmeFinal2021Reduced['fraud']
-
-# Split the data into training and test sets (adjust the test_size parameter as needed)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-trainSet = pd.concat([X_train, y_train], axis=1)
-testSet = pd.concat([X_test, y_test], axis=1)
+dmeFinal2019TrainSetReduced = oversamplingAndReduction(dmeFinal2019TrainSet, .3, .01)
+dmeFinal2019TestSetReduced = oversamplingAndReduction(dmeFinal2019TestSet, .3, .01)
 
 def trainingForGPTJSONL(row):
     sentence = "Please determine whether or not this provider is fraudulent: "
@@ -190,8 +189,8 @@ def get_fraud_status(fraud):
 # Assuming df is your DataFrame
 # Apply the function to each row and create a new column with the results
 result_df = pd.DataFrame()
-result_df['metadata'] = trainSet.apply(trainingForGPTJSONL, axis=1)
-result_df['result'] = trainSet.apply(lambda row: get_fraud_status(row['fraud']), axis=1)
+result_df['metadata'] = dmeFinal2019TrainSetReduced.apply(trainingForGPTJSONL, axis=1)
+result_df['result'] = dmeFinal2019TrainSetReduced.apply(lambda row: get_fraud_status(row['fraud']), axis=1)
 
 # System role content stays constant
 system_content = "Robin is a chatbot that, given some provider data, determines whether or not the provider is fraudulent"
@@ -208,14 +207,14 @@ for index, row in result_df.iterrows():
     }
     jsonl_list.append(message_structure)
 
-with open('dme2021SmallGPTTraining.jsonl', 'w') as jsonl_file:
+with open('dme2019SmallGPTTraining.jsonl', 'w') as jsonl_file:
     for jsonl in jsonl_list:
         json.dump(jsonl, jsonl_file)
         jsonl_file.write('\n')
 
 result_df = pd.DataFrame()
-result_df['metadata'] = testSet.apply(trainingForGPTJSONL, axis=1)
-result_df['result'] = testSet.apply(lambda row: get_fraud_status(row['fraud']), axis=1)
+result_df['metadata'] = dmeFinal2019TestSetReduced.apply(trainingForGPTJSONL, axis=1)
+result_df['result'] = dmeFinal2019TestSetReduced.apply(lambda row: get_fraud_status(row['fraud']), axis=1)
 
 # System role content stays constant
 system_content = "Robin is a chatbot that, given some provider data, determines whether or not the provider is fraudulent"
@@ -232,7 +231,7 @@ for index, row in result_df.iterrows():
     }
     jsonl_list.append(message_structure)
 
-with open('TESTdme2021SmallGPT.jsonl', 'w') as jsonl_file:
+with open('TESTdme2019SmallGPT.jsonl', 'w') as jsonl_file:
     for jsonl in jsonl_list:
         json.dump(jsonl, jsonl_file)
         jsonl_file.write('\n')
