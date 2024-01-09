@@ -61,13 +61,12 @@ def labelFinalDataset (allFraudForYear, dataset, year):
 #                   '/Users/kevinlu/Documents/GitHub/hfraud/data/dme2019Merged.csv',
 #                   2019)
 
-# #ROS + RUS for training and validation to counter class imbalance
 dmeFinal2019 = pd.read_csv('/Users/kevinlu/Documents/GitHub/hfraud/data/dmeFinal2019.csv')
 
+# Split the data into training and test sets (adjust the test_size parameter as needed)
 X = dmeFinal2019.drop('fraud', axis=1)
 y = dmeFinal2019['fraud']
 
-# Split the data into training and test sets (adjust the test_size parameter as needed)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 dmeFinal2019TrainSet = pd.concat([X_train, y_train], axis=1)
@@ -92,6 +91,7 @@ def oversamplingAndReduction(df, minorityRatio, percentageToKeep):
 
     return dmeFinal2021Reduced
 
+#ROS for both the train and test set
 dmeFinal2019TrainSetReduced = oversamplingAndReduction(dmeFinal2019TrainSet, .3, .01)
 dmeFinal2019TestSetReduced = oversamplingAndReduction(dmeFinal2019TestSet, .3, .01)
 
