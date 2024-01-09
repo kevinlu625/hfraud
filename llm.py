@@ -18,7 +18,6 @@ from langchain.schema import (
 from tqdm.auto import tqdm
 from openai import OpenAI
 
-
 env = environ.Env()
 environ.Env.read_env()
 
@@ -30,7 +29,7 @@ os.environ['REPLICATE_API_TOKEN'] = REPLICATE_API_TOKEN
 os.environ['PINECONE_API_KEY'] = PINECONE_API_KEY
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
-dojPressRelease = pd.read_csv('/Users/kevinlu/Documents/GitHub/hfraud/data/dojPressRelease.csv')
+# dojPressRelease = pd.read_csv('/Users/kevinlu/Documents/GitHub/hfraud/data/dojPressRelease.csv')
 def runDOJPressReleaseRagWithGPT3Point5Turbo(dojPressRelease):
     #testing out RAG deployment
     chat = ChatOpenAI(
@@ -156,52 +155,14 @@ def runDOJPressReleaseRagWithGPT3Point5Turbo(dojPressRelease):
 
 ######################################
 
-# loader = DataFrameLoader(resultingInpatientStrgData, page_content_column="sentence")
-# documents = loader.load()
-
-# text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-# texts = text_splitter.split_documents(documents)
-
-# embeddings = HuggingFaceEmbeddings()
-
-# pinecone.init(      
-# 	api_key=PINECONE_API_KEY,      
-# 	environment='gcp-starter'      
-# )      
-# index_name = "hfraud"
-# index = pinecone.Index(index_name)
-
-# #adding to Pinecone index
-# # vectordb = Pinecone.from_documents(texts, embeddings, index_name=index_name)
-
-# #using Pinecone index
-# vectordb = Pinecone.from_existing_index("stringeddata", embeddings)
-
-# llm = Replicate(
-#     model="meta/llama-2-70b-chat:02e509c789964a7ea8736978a43525956ef40397be9033abf9fd2badfe68c9e3",
-#     model_kwargs={"temperature": 0.75, "max_length": 3000}
-# )
-
-# qa_chain = ConversationalRetrievalChain.from_llm(
-#     llm,
-#     vectordb.as_retriever(search_kwargs={'k': 2}),
-#     return_source_documents=True
-# )
-
-# chat_history = []
-# while True:
-#     query = input('Prompt: ')
-#     result = qa_chain({'question': query, 'chat_history': chat_history})
-#     print('Answer: ' + result['answer'] + '\n')
-#     chat_history.append((query, result['answer']))
-    
 client = OpenAI()
 
 response = client.chat.completions.create(
-  model="ft:gpt-3.5-turbo-1106:k-solutions::8eXjaj9k",
+  model="ft:gpt-3.5-turbo-1106:k-solutions::8eenabp7",
   messages=[
     {"role": "system", "content": "You are a chatbot that, given some provider data, determines whether or not the provider is fraudulent"},
-    {"role": "user", "content": "Please determine whether or not this provider is fraudulent: The provider\u2019s name is Stuart T Lewis D.O.. They practice Internal Medicine. In 2021, they charged Medicare for these HCPCS codes: ['J7620', 'Q0513', 'K0001', 'E1390', 'E0261', 'K0195', 'J7626', 'E1392']. Their beneficiaries' average age was 83.384615385. Their beneficiaries' average risk score was 2.1425128205. Of this providers patients,  75.0% have Alzheimer\u2019s/Dementia, 75.0% have Depression, 75.0% have Hypertension, 0.0% have Osteoporosis, They ordered a total of $53149.77 for all durable medical equipment (DME) products/services. Their Medicare allowed amount for all DME products/services was $13915.16. The standardized amount that Medicare paid them after deductible and coinsurance amounts was $11000.55. The total number of unique beneficiaries associated with DME claims ordered by this provider was 13.0. The total number of DME claims ordered by this provider was 106.0. The total number of unique DME HCPCS codes ordered by this provider was 17.0. The total number of DME products/services ordered by this provider was 2092.0. The total number of DME suppliers this provider worked with was 8.0.They ordered a total of $396.0 for all drug and nutritional products/services. Their Medicare allowed amount for all drug and nutritional products/services ordered by this referring provider is $396.0. The standardized amount that Medicare paid after deductible and coinsurance amounts was $284.57. The total number of drug and nutritional product claims ordered by this provider was 12.0. The total number of unique drug and nutritional product HCPCS codes ordered by this provider was 1.0. The total number of drug and nutritional products/services ordered by this provider was 12.0. The total number of drug and nutritional suppliers this provider worked with was 1.0.They ordered a total of $0.0 for all prosthetic and orthotic (POS) products/services. Their Medicare allowed amount for all POS products/services ordered by this referring provider is $0.0. The standardized amount that Medicare paid after deductible and coinsurance amounts was $0.0. The total number of unique beneficiaries associated with POS claims ordered by this provider was 0.0. The total number of POS claims ordered by this provider was 0.0. The total number of unique POS HCPCS codes ordered by this provider was 0.0. The total number of POS products/services ordered by this provider was 0.0. The total number of POS suppliers this provider worked with was 0.0."}
+    {"role": "user", "content": "Let's find out if this doctor, Jeffrey L Fraser, is doing things the right way or not. In the year 2021, he asked Medicare (which helps people pay for their medical things) for money using a special code called 'A4253'. The people who usually see this doctor are around 68 years old, and the doctor's average score for how risky the patients are is 1.29. Now, this doctor wanted to buy special medical things (like equipment) for a total cost of $924.92. But, Medicare only said it's okay to spend $160.97 on these things. After people paid their part, Medicare gave the doctor $95.88. The doctor asked for this money 12 times and used 5 different codes for these things. In total, the doctor ordered 19 different medical things from 5 different places. Now, when it comes to getting medicine or special food, the doctor didn't ask for any money. The doctor also didn't ask for money for special things like artificial arms or legs. So, the total for these things was $0.00, and Medicare didn't give any money for them. It's a bit like checking if everything is okay with how the doctor is asking for money and what the doctor is buying for the patients."}
   ]
 )
+
 print(response.choices[0].message)
